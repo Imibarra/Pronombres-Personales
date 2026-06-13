@@ -1,432 +1,924 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clasificador de Pronombres Personales</title>
-    <!-- Carga de Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Estilos personalizados para el cursor y elementos interactivos */
-        .word:hover {
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        .correct-pronoun {
-            background-color: #10B981; /* Esmeralda 500 */
-            color: white;
-            border-radius: 0.5rem;
-            padding: 2px 6px;
-        }
-        .incorrect-selection {
-            background-color: #EF4444; /* Rojo 500 */
-            color: white;
-            border-radius: 0.5rem;
-            padding: 2px 6px;
-        }
-        .classification-button.active {
-            opacity: 1;
-            cursor: pointer;
-        }
-        .classification-button.inactive {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .classification-button.selected {
-            border: 3px solid #FCD34D; /* Amarillo 300 */
-            background-color: #FEF3C7; /* Amarillo 100 */
-        }
-        .classification-button.correct {
-            border: 3px solid #059669; /* Verde 600 */
-            background-color: #D1FAE5; /* Verde 100 */
-        }
-        .classification-button.incorrect {
-            border: 3px solid #B91C1C; /* Rojo 700 */
-            background-color: #FEE2E2; /* Rojo 100 */
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pronombres personales I · Beta-Urreko</title>
+  <style>
+    :root {
+      --subject: #9F1239;
+      --subject-dark: #7f0f2e;
+      --subject-soft: #fff1f4;
+      --subject-soft-2: #ffe4eb;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --surface: #ffffff;
+      --background: #f8fafc;
+      --success: #2E7D32;
+      --success-soft: #e8f5e9;
+      --error: #C62828;
+      --error-soft: #ffebee;
+      --warning: #E67E22;
+      --warning-soft: #fff4e6;
+      --info: #1E88E5;
+      --info-soft: #eaf4ff;
+      --secondary: #6B7280;
+      --shadow: 0 18px 50px rgba(31, 41, 55, 0.12);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(159, 18, 57, 0.13), transparent 34rem),
+        linear-gradient(135deg, #fff7f9 0%, #f8fafc 45%, #eef2f7 100%);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px;
+    }
+
+    .app-shell {
+      width: min(100%, 980px);
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px;
+      background: rgba(255,255,255,0.9);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      color: var(--subject);
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .brand-badge {
+      width: 40px;
+      height: 40px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--subject);
+      color: #ffffff;
+      font-size: 0.95rem;
+      box-shadow: 0 8px 20px rgba(159, 18, 57, 0.26);
+    }
+
+    .subject-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: var(--subject-soft);
+      border: 1px solid var(--subject-soft-2);
+      color: var(--subject);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    main {
+      padding: 26px;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 28px 16px 18px;
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 12px;
+      color: var(--subject);
+      font-size: clamp(2rem, 5vw, 3rem);
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      margin: 0 auto 24px;
+      color: var(--muted);
+      font-size: clamp(1rem, 2.5vw, 1.15rem);
+      line-height: 1.5;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 24px auto 30px;
+      max-width: 780px;
+    }
+
+    .info-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      text-align: left;
+      box-shadow: 0 10px 24px rgba(31,41,55,0.06);
+    }
+
+    .info-card strong {
+      display: block;
+      color: var(--subject);
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .info-card span {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.35;
+    }
+
+    .activity-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .score-card {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .metric {
+      padding: 10px 13px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(31,41,55,0.05);
+    }
+
+    .metric span {
+      color: var(--subject);
+    }
+
+    .progress-wrap {
+      grid-column: 1 / -1;
+      height: 12px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--subject), #be345b);
+      border-radius: inherit;
+      transition: width 0.25s ease;
+    }
+
+    .activity-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 12px 30px rgba(31,41,55,0.07);
+      padding: 22px;
+    }
+
+    .panel-title {
+      margin-bottom: 10px;
+      color: var(--subject);
+      font-size: 1.15rem;
+      font-weight: 850;
+    }
+
+    .instruction {
+      color: var(--muted);
+      margin-bottom: 18px;
+      line-height: 1.45;
+    }
+
+    .sentence-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      padding: 22px;
+      border-radius: var(--radius-md);
+      background: var(--subject-soft);
+      border: 2px dashed rgba(159, 18, 57, 0.25);
+      text-align: center;
+      line-height: 1.8;
+      font-size: clamp(1.55rem, 4vw, 2.25rem);
+      font-weight: 760;
+    }
+
+    .word {
+      display: inline-block;
+      margin: 3px 2px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.16s ease, transform 0.12s ease, box-shadow 0.16s ease;
+    }
+
+    .word:hover {
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(159, 18, 57, 0.14);
+    }
+
+    .word:active {
+      transform: scale(0.98);
+    }
+
+    .word.correct-pronoun {
+      background: var(--success);
+      color: #ffffff;
+      box-shadow: 0 8px 18px rgba(46, 125, 50, 0.2);
+    }
+
+    .word.incorrect-selection {
+      background: var(--error);
+      color: #ffffff;
+      box-shadow: 0 8px 18px rgba(198, 40, 40, 0.2);
+    }
+
+    .feedback {
+      min-height: 58px;
+      margin-top: 18px;
+      padding: 15px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--muted);
+      font-weight: 750;
+      line-height: 1.35;
+    }
+
+    .feedback.success {
+      color: var(--success);
+      background: var(--success-soft);
+      border-color: rgba(46, 125, 50, 0.25);
+    }
+
+    .feedback.error {
+      color: var(--error);
+      background: var(--error-soft);
+      border-color: rgba(198, 40, 40, 0.25);
+    }
+
+    .feedback.warning {
+      color: #9a4b00;
+      background: var(--warning-soft);
+      border-color: rgba(230, 126, 34, 0.28);
+    }
+
+    .feedback.info {
+      color: var(--info);
+      background: var(--info-soft);
+      border-color: rgba(30, 136, 229, 0.2);
+    }
+
+    .steps {
+      display: grid;
+      gap: 14px;
+    }
+
+    .step-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      background: #ffffff;
+      transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .step-card.active-step {
+      border-color: rgba(159, 18, 57, 0.45);
+      background: #fff8fa;
+      box-shadow: inset 4px 0 0 var(--subject);
+    }
+
+    .step-card.done-step {
+      border-color: rgba(46, 125, 50, 0.35);
+      background: #fbfffb;
+      box-shadow: inset 4px 0 0 var(--success);
+    }
+
+    .step-card h3 {
+      margin-bottom: 12px;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 14px;
+      padding: 12px 17px;
+      font-size: 1rem;
+      font-weight: 800;
+      transition: transform 0.12s ease, background-color 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+    }
+
+    button:focus-visible, .word:focus-visible {
+      outline: 4px solid rgba(30, 136, 229, 0.28);
+      outline-offset: 3px;
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-primary {
+      background: var(--subject);
+      color: #ffffff;
+      box-shadow: 0 10px 24px rgba(159, 18, 57, 0.25);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--subject-dark);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: var(--subject);
+      border: 2px solid rgba(159, 18, 57, 0.28);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--subject-soft);
+    }
+
+    .classification-button {
+      background: #f3f4f6;
+      color: var(--text);
+      border: 2px solid transparent;
+      min-width: 110px;
+    }
+
+    .classification-button:hover:not(:disabled) {
+      background: var(--subject-soft);
+      border-color: rgba(159, 18, 57, 0.25);
+    }
+
+    .classification-button.correct {
+      background: var(--success-soft);
+      color: var(--success);
+      border-color: rgba(46, 125, 50, 0.4);
+    }
+
+    .classification-button.incorrect {
+      background: var(--error-soft);
+      color: var(--error);
+      border-color: rgba(198, 40, 40, 0.45);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .final-card {
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 34px 22px;
+    }
+
+    .final-emoji {
+      font-size: clamp(3rem, 10vw, 5rem);
+      margin: 12px 0 18px;
+    }
+
+    .final-score {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 160px;
+      padding: 14px 20px;
+      border-radius: 999px;
+      background: var(--subject-soft);
+      color: var(--subject);
+      font-size: 1.4rem;
+      font-weight: 900;
+      margin: 10px 0 22px;
+    }
+
+    @media (max-width: 800px) {
+      body {
+        padding: 12px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      main {
+        padding: 18px;
+      }
+
+      .info-grid,
+      .activity-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .activity-header {
+        grid-template-columns: 1fr;
+      }
+
+      .score-card {
+        justify-content: flex-start;
+      }
+
+      .sentence-box {
+        min-height: 140px;
+      }
+
+      .actions {
+        justify-content: stretch;
+        flex-direction: column;
+      }
+
+      .actions button,
+      .hero button {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-50 font-sans min-h-screen flex flex-col items-center p-4">
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="Beta-Urreko">
+        <span class="brand-badge">BU</span>
+        <span>Beta-Urreko</span>
+      </div>
+      <div class="subject-chip">Lengua Castellana · Pronombres personales</div>
+    </header>
 
-    <!-- Contenedor Principal -->
-    <div class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-6 md:p-10 my-8">
+    <main>
+      <section id="start-screen" class="screen active">
+        <div class="hero">
+          <h1>Pronombres personales · Nivel I</h1>
+          <p class="subtitle">
+            Lee cada oración, haz clic en el pronombre personal y clasifícalo por tipo, persona y número.
+          </p>
 
-        <h1 class="text-3xl md:text-4xl font-extrabold text-indigo-700 text-center mb-6">
-            Análisis de Pronombres Personales
-        </h1>
-        <p class="text-lg text-gray-600 text-center mb-8">
-            Selecciona el pronombre en la oración y clasifícalo. (Total: 30 preguntas)
-        </p>
+          <div class="info-grid" aria-label="Características de la actividad">
+            <div class="info-card">
+              <strong>30 preguntas</strong>
+              <span>Una oración por reto, con avance guiado paso a paso.</span>
+            </div>
+            <div class="info-card">
+              <strong>Clasificación</strong>
+              <span>Tónico o átono, persona gramatical y número.</span>
+            </div>
+            <div class="info-card">
+              <strong>Puntuación</strong>
+              <span>Cada pregunta suma punto si se completa sin errores.</span>
+            </div>
+          </div>
 
-        <!-- Área de la Oración -->
-        <div id="sentence-container" class="min-h-[100px] border-2 border-dashed border-indigo-200 bg-indigo-50 p-6 rounded-xl mb-8 flex items-center justify-center">
-            <p id="current-sentence" class="text-2xl text-gray-800 font-medium leading-relaxed text-center">
-                <!-- La oración se renderizará aquí -->
-                Cargando oración...
-            </p>
+          <button class="btn-primary" type="button" onclick="startGame()">Comenzar</button>
+        </div>
+      </section>
+
+      <section id="game-screen" class="screen" aria-live="polite">
+        <div class="activity-header">
+          <div>
+            <h1 style="font-size: clamp(1.8rem, 4vw, 2.45rem); margin-bottom: 8px;">Análisis de pronombres personales</h1>
+            <p class="subtitle" style="margin: 0; text-align: left;">Primero selecciona el pronombre en la oración. Después completa la clasificación.</p>
+          </div>
+          <div class="score-card">
+            <div class="metric">Puntos: <span id="score-display">0</span></div>
+            <div class="metric">Pregunta: <span id="question-display">1/30</span></div>
+          </div>
+          <div class="progress-wrap" aria-hidden="true">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
         </div>
 
-        <!-- Mensajes de Feedback y Progreso -->
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
-            <p id="feedback-message" class="text-lg font-semibold text-center h-6"></p>
-            <div class="text-xl font-bold text-gray-700">
-                <!-- El progreso se actualizará aquí con el formato "Pregunta X de Y | Quedan Z" -->
-                <span id="progress-display" class="text-indigo-600">Cargando...</span>
+        <div class="activity-grid">
+          <div class="panel">
+            <div class="panel-title">1. Selecciona el pronombre</div>
+            <p class="instruction">Pulsa sobre la palabra que funciona como pronombre personal.</p>
+            <div id="sentence-box" class="sentence-box">
+              <p id="current-sentence">Cargando oración...</p>
             </div>
+            <div id="feedback" class="feedback info">Elige el pronombre personal.</div>
+            <div class="actions">
+              <button id="next-button" class="btn-primary hidden" type="button" onclick="nextSentence()">Siguiente</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">2. Clasifica el pronombre</div>
+            <div class="steps">
+              <div id="step-type" class="step-card">
+                <h3>Tipo</h3>
+                <div class="button-row">
+                  <button type="button" data-value="tónico" data-category="type" class="classification-button" disabled>Tónico</button>
+                  <button type="button" data-value="átono" data-category="type" class="classification-button" disabled>Átono</button>
+                </div>
+              </div>
+
+              <div id="step-person" class="step-card">
+                <h3>Persona</h3>
+                <div class="button-row">
+                  <button type="button" data-value="1" data-category="person" class="classification-button" disabled>1.ª persona</button>
+                  <button type="button" data-value="2" data-category="person" class="classification-button" disabled>2.ª persona</button>
+                  <button type="button" data-value="3" data-category="person" class="classification-button" disabled>3.ª persona</button>
+                </div>
+              </div>
+
+              <div id="step-number" class="step-card">
+                <h3>Número</h3>
+                <div class="button-row">
+                  <button type="button" data-value="singular" data-category="number" class="classification-button" disabled>Singular</button>
+                  <button type="button" data-value="plural" data-category="number" class="classification-button" disabled>Plural</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <!-- Área de Clasificación -->
-        <div id="classification-area" class="space-y-6">
-
-            <!-- 1. Tónico o Átono -->
-            <div id="step-type" class="p-4 border border-gray-200 rounded-lg">
-                <h3 class="text-xl font-semibold mb-3 text-gray-700">1. Tipo (Tónico o Átono)</h3>
-                <div class="flex flex-wrap gap-3">
-                    <button data-value="tónico" data-category="type" class="classification-button inactive px-5 py-2 rounded-xl text-lg font-medium transition duration-200 bg-gray-100 hover:bg-gray-200">Tónico</button>
-                    <button data-value="átono" data-category="type" class="classification-button inactive px-5 py-2 rounded-xl text-lg font-medium transition duration-200 bg-gray-100 hover:bg-gray-200">Átono</button>
-                </div>
-            </div>
-
-            <!-- 2. Persona -->
-            <div id="step-person" class="p-4 border border-gray-200 rounded-lg">
-                <h3 class="text-xl font-semibold mb-3 text-gray-700">2. Persona</h3>
-                <div class="flex flex-wrap gap-3">
-                    <button data-value="1" data-category="person" class="classification-button inactive px-5 py-2 rounded-xl text-lg font-medium transition duration-200 bg-gray-100 hover:bg-gray-200">1ª Persona</button>
-                    <button data-value="2" data-category="person" class="classification-button inactive px-5 py-2 rounded-xl text-lg font-medium transition duration-200 bg-gray-100 hover:bg-gray-200">2ª Persona</button>
-                    <button data-value="3" data-category="person" class="classification-button inactive px-5 py-2 rounded-xl text-lg font-medium transition duration-200 bg-gray-100 hover:bg-gray-200">3ª Persona</button>
-                </div>
-            </div>
-
-            <!-- 3. Número -->
-            <div id="step-number" class="p-4 border border-gray-200 rounded-lg">
-                <h3 class="text-xl font-semibold mb-3 text-gray-700">3. Número</h3>
-                <div class="flex flex-wrap gap-3">
-                    <button data-value="singular" data-category="number" class="classification-button inactive px-5 py-2 rounded-xl text-lg font-medium transition duration-200 bg-gray-100 hover:bg-gray-200">Singular</button>
-                    <button data-value="plural" data-category="number" class="classification-button inactive px-5 py-2 rounded-xl text-lg font-medium transition duration-200 bg-gray-100 hover:bg-gray-200">Plural</button>
-                </div>
-            </div>
-
-            <!-- Botón de Siguiente/Reiniciar -->
-            <div class="pt-4 flex justify-end">
-                <button id="next-button" class="bg-indigo-500 text-white font-bold py-3 px-8 rounded-xl hover:bg-indigo-600 transition duration-300 shadow-md hidden" onclick="nextSentence()">
-                    Siguiente Oración &rarr;
-                </button>
-                <button id="restart-button" class="bg-green-500 text-white font-bold py-3 px-8 rounded-xl hover:bg-green-600 transition duration-300 shadow-md hidden" onclick="initializeGame()">
-                    Reiniciar Juego
-                </button>
-            </div>
+      <section id="final-screen" class="screen">
+        <div class="final-card panel">
+          <h1 id="final-title">Actividad terminada</h1>
+          <div class="final-emoji" aria-hidden="true">🏆</div>
+          <p id="final-message" class="subtitle"></p>
+          <div id="final-score" class="final-score">0/30</div>
+          <div class="actions" style="justify-content: center;">
+            <button class="btn-primary" type="button" onclick="initializeGame()">Repetir</button>
+            <button class="btn-secondary" type="button" onclick="showStartScreen()">Volver al inicio</button>
+          </div>
         </div>
-    </div>
+      </section>
+    </main>
+  </div>
 
-    <script>
-        // Configuración de la base de datos de 30 oraciones
-        const allSentences = [
-            // 1ª Persona (Yo / Nosotros)
-            { sentence: "Mi hermano me dio la llave.", pronoun: "me", type: "átono", person: 1, number: "singular" },
-            { sentence: "El profesor te felicitó por tu trabajo.", pronoun: "te", type: "átono", person: 2, number: "singular" }, 
-            { sentence: "Ellos vieron el río desbordarse.", pronoun: "Ellos", type: "tónico", person: 3, number: "plural" },
-            { sentence: "Con nosotros todo es más fácil.", pronoun: "nosotros", type: "tónico", person: 1, number: "plural" },
-            { sentence: "Mi hermana la vio en el cine.", pronoun: "la", type: "átono", person: 3, number: "singular" },
-            { sentence: "Esto no nos beneficia.", pronoun: "nos", type: "átono", person: 1, number: "plural" },
-            { sentence: "Mi abuelo viene conmigo al mercado.", pronoun: "conmigo", type: "tónico", person: 1, number: "singular" }, 
-            { sentence: "Mi tía le regaló una flor.", pronoun: "le", type: "átono", person: 3, number: "singular" },
-            { sentence: "El líder confía en sí mismo.", pronoun: "sí", type: "tónico", person: 3, number: "singular" },
-            { sentence: "Mis amigos están con nosotras.", pronoun: "nosotras", type: "tónico", person: 1, number: "plural" },
-            
-            // 2ª Persona (Tú/Vos/Ustedes / Vosotros)
-            // Oración 11 (Índice 10) - Cambio solicitado: Ella, tónico, 3ª, singular.
-            { sentence: "Ella vio un perro en la calle.", pronoun: "Ella", type: "tónico", person: 3, number: "singular" },
-            { sentence: "El regalo es para ti.", pronoun: "ti", type: "tónico", person: 2, number: "singular" },
-            // Oración 13 (Índice 12) - Cambio solicitado: explicación sobre 'te' en "comprarte".
-            { 
-                sentence: "Quiero comprarte un regalo.", 
-                pronoun: "te", 
-                type: "átono", 
-                person: 2, 
-                number: "singular" 
-            }, // Nota: El pronombre átono 'te' se fusiona con el verbo en infinitivo ('comprar'), formando un único vocablo.
-            { sentence: "Trae las flores contigo.", pronoun: "contigo", type: "tónico", person: 2, number: "singular" },
-            { sentence: "¿Quién os trajo el paquete?", pronoun: "os", type: "átono", person: 2, number: "plural" },
-            { sentence: "Te hemos visto trabajar mucho.", pronoun: "te", type: "átono", person: 2, number: "singular" },
-            { sentence: "Aquel coche es de ustedes.", pronoun: "ustedes", type: "tónico", person: 2, number: "plural" },
-            // Oración 18 (Índice 17) - Cambio solicitado: "No os lo creáis tanto", átono, 2ª, plural.
-            { sentence: "No os lo creáis tanto.", pronoun: "os", type: "átono", person: 2, number: "plural" }, 
-            // Oración 19 (Índice 18) - Cambio solicitado: "Mi equipo debe ir con vosotros."
-            { sentence: "Mi equipo debe ir con vosotros.", pronoun: "vosotros", type: "tónico", person: 2, number: "plural" }, 
-            { sentence: "Os quiero decir la verdad.", pronoun: "os", type: "átono", person: 2, number: "plural" },
-            
-            // 3ª Persona (Él/Ella/Ello/Ellos/Ellas/Ustedes)
-            { sentence: "Los estudiantes lo hicieron muy bien.", pronoun: "lo", type: "átono", person: 3, number: "singular" },
-            { sentence: "Las niñas se fueron temprano.", pronoun: "se", type: "átono", person: 3, number: "plural" },
-            // Oración 23 (Índice 22) - Cambio solicitado: "Mikel siempre trae el libro consigo."
-            { sentence: "Mikel siempre trae el libro consigo.", pronoun: "consigo", type: "tónico", person: 3, number: "singular" }, 
-            { sentence: "Mi amiga se puso contenta.", pronoun: "se", type: "átono", person: 3, number: "singular" },
-            { sentence: "Esperamos a ellas en la esquina.", pronoun: "ellas", type: "tónico", person: 3, number: "plural" }, 
-            // Oración 26 (Índice 25) - Cambio solicitado: "Le dimos el regalo", átono, 3ª, singular.
-            { sentence: "Le dimos el regalo.", pronoun: "le", type: "átono", person: 3, number: "singular" },
-            { sentence: "Los chicos le cantaron una canción.", pronoun: "le", type: "átono", person: 3, number: "singular" },
-            { sentence: "Compró esa casa para sí mismo.", pronoun: "sí", type: "tónico", person: 3, number: "singular" },
-            { sentence: "La casa la compró mi abuelo.", pronoun: "la", type: "átono", person: 3, number: "singular" },
-            { sentence: "Los niños corren tras ellos.", pronoun: "ellos", type: "tónico", person: 3, number: "plural" } 
-        ];
+  <script>
+    const allSentences = [
+      { sentence: "Mi hermano me dio la llave.", pronoun: "me", targetIndex: 2, type: "átono", person: 1, number: "singular" },
+      { sentence: "El profesor te felicitó por tu trabajo.", pronoun: "te", targetIndex: 2, type: "átono", person: 2, number: "singular" },
+      { sentence: "Ellos vieron el río desbordarse.", pronoun: "Ellos", targetIndex: 0, type: "tónico", person: 3, number: "plural" },
+      { sentence: "Con nosotros todo es más fácil.", pronoun: "nosotros", targetIndex: 1, type: "tónico", person: 1, number: "plural" },
+      { sentence: "Mi hermana la vio en el cine.", pronoun: "la", targetIndex: 2, type: "átono", person: 3, number: "singular" },
+      { sentence: "Esto no nos beneficia.", pronoun: "nos", targetIndex: 2, type: "átono", person: 1, number: "plural" },
+      { sentence: "Mi abuelo viene conmigo al mercado.", pronoun: "conmigo", targetIndex: 3, type: "tónico", person: 1, number: "singular" },
+      { sentence: "Mi tía le regaló una flor.", pronoun: "le", targetIndex: 2, type: "átono", person: 3, number: "singular" },
+      { sentence: "El líder confía en sí mismo.", pronoun: "sí", targetIndex: 4, type: "tónico", person: 3, number: "singular" },
+      { sentence: "Mis amigos están con nosotras.", pronoun: "nosotras", targetIndex: 4, type: "tónico", person: 1, number: "plural" },
+      { sentence: "Ella vio un perro en la calle.", pronoun: "Ella", targetIndex: 0, type: "tónico", person: 3, number: "singular" },
+      { sentence: "El regalo es para ti.", pronoun: "ti", targetIndex: 4, type: "tónico", person: 2, number: "singular" },
+      { sentence: "Quiero comprarte un regalo.", pronoun: "te", targetIndex: 1, type: "átono", person: 2, number: "singular", note: "En «comprarte», el pronombre átono «te» aparece unido al infinitivo." },
+      { sentence: "Trae las flores contigo.", pronoun: "contigo", targetIndex: 3, type: "tónico", person: 2, number: "singular" },
+      { sentence: "¿Quién os trajo el paquete?", pronoun: "os", targetIndex: 1, type: "átono", person: 2, number: "plural" },
+      { sentence: "Te hemos visto trabajar mucho.", pronoun: "te", targetIndex: 0, type: "átono", person: 2, number: "singular" },
+      { sentence: "Aquel coche es de ustedes.", pronoun: "ustedes", targetIndex: 4, type: "tónico", person: 2, number: "plural" },
+      { sentence: "No os creáis tanto.", pronoun: "os", targetIndex: 1, type: "átono", person: 2, number: "plural" },
+      { sentence: "Mi equipo debe ir con vosotros.", pronoun: "vosotros", targetIndex: 5, type: "tónico", person: 2, number: "plural" },
+      { sentence: "Os quiero decir la verdad.", pronoun: "os", targetIndex: 0, type: "átono", person: 2, number: "plural" },
+      { sentence: "Los estudiantes lo hicieron muy bien.", pronoun: "lo", targetIndex: 2, type: "átono", person: 3, number: "singular" },
+      { sentence: "Las niñas se fueron temprano.", pronoun: "se", targetIndex: 2, type: "átono", person: 3, number: "plural" },
+      { sentence: "Mikel siempre trae el libro consigo.", pronoun: "consigo", targetIndex: 5, type: "tónico", person: 3, number: "singular" },
+      { sentence: "Mi amiga se puso contenta.", pronoun: "se", targetIndex: 2, type: "átono", person: 3, number: "singular" },
+      { sentence: "Esperamos a ellas en la esquina.", pronoun: "ellas", targetIndex: 2, type: "tónico", person: 3, number: "plural" },
+      { sentence: "Le dimos el regalo.", pronoun: "le", targetIndex: 0, type: "átono", person: 3, number: "singular" },
+      { sentence: "Los chicos le cantaron una canción.", pronoun: "le", targetIndex: 2, type: "átono", person: 3, number: "singular" },
+      { sentence: "Compró esa casa para sí mismo.", pronoun: "sí", targetIndex: 4, type: "tónico", person: 3, number: "singular" },
+      { sentence: "La casa la compró mi abuelo.", pronoun: "la", targetIndex: 2, type: "átono", person: 3, number: "singular" },
+      { sentence: "Los niños corren tras ellos.", pronoun: "ellos", targetIndex: 4, type: "tónico", person: 3, number: "plural" }
+    ];
 
-        let sentences = []; // Usaremos una copia aleatoria o la versión completa
-        let currentSentenceIndex = 0;
-        let score = 0;
-        let classificationStep = 'type'; // 'type', 'person', 'number'
+    let sentences = [];
+    let currentSentenceIndex = 0;
+    let score = 0;
+    let pointLost = false;
+    let state = {
+      pronounSelected: false,
+      typeCorrect: false,
+      personCorrect: false,
+      numberCorrect: false
+    };
 
-        // Estado de la selección
-        let state = {
-            pronounSelected: false,
-            typeCorrect: false,
-            personCorrect: false,
-            numberCorrect: false,
-            stepsCompleted: 0
-        };
+    const startScreen = document.getElementById("start-screen");
+    const gameScreen = document.getElementById("game-screen");
+    const finalScreen = document.getElementById("final-screen");
+    const sentenceEl = document.getElementById("current-sentence");
+    const feedbackEl = document.getElementById("feedback");
+    const nextButton = document.getElementById("next-button");
+    const scoreDisplay = document.getElementById("score-display");
+    const questionDisplay = document.getElementById("question-display");
+    const progressBar = document.getElementById("progress-bar");
 
-        // Elementos del DOM
-        const sentenceEl = document.getElementById('current-sentence');
-        const progressEl = document.getElementById('progress-display');
-        const feedbackEl = document.getElementById('feedback-message');
-        const nextButton = document.getElementById('next-button');
-        const restartButton = document.getElementById('restart-button');
+    function showScreen(screen) {
+      [startScreen, gameScreen, finalScreen].forEach(s => s.classList.remove("active"));
+      screen.classList.add("active");
+    }
 
-        // Inicializa el juego
-        function initializeGame() {
-            // Reiniciar variables
-            sentences = [...allSentences]; // Usa la lista completa de 30 oraciones
-            currentSentenceIndex = 0;
-            score = 0;
-            updateProgressDisplay();
-            restartButton.classList.add('hidden');
-            feedbackEl.textContent = '¡Comencemos! Elige el pronombre.';
+    function showStartScreen() {
+      showScreen(startScreen);
+    }
 
-            renderSentence();
+    function startGame() {
+      initializeGame();
+    }
+
+    function initializeGame() {
+      sentences = [...allSentences];
+      currentSentenceIndex = 0;
+      score = 0;
+      showScreen(gameScreen);
+      renderSentence();
+    }
+
+    function renderSentence() {
+      if (currentSentenceIndex >= sentences.length) {
+        showFinalScore();
+        return;
+      }
+
+      const currentData = sentences[currentSentenceIndex];
+      const words = currentData.sentence.split(/\s+/);
+      pointLost = false;
+      resetState();
+      resetClassificationSteps();
+      nextButton.classList.add("hidden");
+
+      sentenceEl.innerHTML = words.map((word, index) => {
+        return `<span tabindex="0" role="button" aria-label="${escapeHtml(word)}" data-index="${index}" class="word">${escapeHtml(word)}</span>`;
+      }).join(" ");
+
+      sentenceEl.querySelectorAll(".word").forEach(span => {
+        span.addEventListener("click", handleWordClick);
+        span.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleWordClick(event);
+          }
+        });
+      });
+
+      updateProgressDisplay();
+      showFeedback("Elige el pronombre personal.", "info");
+    }
+
+    function handleWordClick(event) {
+      if (state.pronounSelected) return;
+
+      const selectedSpan = event.currentTarget;
+      const selectedIndex = Number(selectedSpan.dataset.index);
+      const currentData = sentences[currentSentenceIndex];
+
+      document.querySelectorAll("#current-sentence .word").forEach(span => {
+        span.classList.remove("correct-pronoun", "incorrect-selection");
+      });
+
+      if (selectedIndex === currentData.targetIndex) {
+        selectedSpan.classList.add("correct-pronoun");
+        state.pronounSelected = true;
+        const note = currentData.note ? ` ${currentData.note}` : "";
+        showFeedback(`Correcto. Has seleccionado «${currentData.pronoun}». Ahora clasifícalo.${note}`, "success");
+        activateClassificationStep("type");
+      } else {
+        pointLost = true;
+        selectedSpan.classList.add("incorrect-selection");
+        showFeedback("No es correcto. Busca el pronombre personal de la oración.", "error");
+        setTimeout(() => {
+          if (!state.pronounSelected) {
+            selectedSpan.classList.remove("incorrect-selection");
+            showFeedback("Elige el pronombre personal.", "info");
+          }
+        }, 1100);
+      }
+    }
+
+    function activateClassificationStep(step) {
+      const card = document.getElementById(`step-${step}`);
+      card.classList.add("active-step");
+      card.classList.remove("done-step");
+      document.querySelectorAll(`.classification-button[data-category="${step}"]`).forEach(btn => {
+        btn.disabled = false;
+        btn.addEventListener("click", handleClassificationClick);
+      });
+    }
+
+    function deactivateClassificationStep(step) {
+      const card = document.getElementById(`step-${step}`);
+      card.classList.remove("active-step");
+      card.classList.add("done-step");
+      document.querySelectorAll(`.classification-button[data-category="${step}"]`).forEach(btn => {
+        btn.disabled = true;
+        btn.removeEventListener("click", handleClassificationClick);
+      });
+    }
+
+    function handleClassificationClick(event) {
+      const button = event.currentTarget;
+      if (button.disabled) return;
+
+      const category = button.dataset.category;
+      const value = button.dataset.value;
+      const currentData = sentences[currentSentenceIndex];
+
+      document.querySelectorAll(`.classification-button[data-category="${category}"]`).forEach(btn => {
+        btn.classList.remove("correct", "incorrect");
+      });
+
+      let isCorrect = false;
+      let nextStep = null;
+      let label = "";
+
+      if (category === "type") {
+        isCorrect = value === currentData.type;
+        nextStep = "person";
+        label = "tipo";
+      }
+
+      if (category === "person") {
+        isCorrect = Number(value) === currentData.person;
+        nextStep = "number";
+        label = "persona";
+      }
+
+      if (category === "number") {
+        isCorrect = value === currentData.number;
+        nextStep = "done";
+        label = "número";
+      }
+
+      if (isCorrect) {
+        button.classList.add("correct");
+        showFeedback(`Correcto. La clasificación de ${label} está bien.`, "success");
+        deactivateClassificationStep(category);
+
+        if (category === "type") state.typeCorrect = true;
+        if (category === "person") state.personCorrect = true;
+        if (category === "number") state.numberCorrect = true;
+
+        if (nextStep === "done") {
+          finishQuestion();
+        } else {
+          activateClassificationStep(nextStep);
         }
+      } else {
+        pointLost = true;
+        button.classList.add("incorrect");
+        showFeedback(`No es correcto. Revisa la clasificación de ${label} y pulsa otra opción.`, "error");
+      }
+    }
 
-        // Renderiza la oración actual
-        function renderSentence() {
-            if (currentSentenceIndex >= sentences.length) {
-                // Fin del juego
-                showFinalScore();
-                return;
-            }
+    function finishQuestion() {
+      const currentData = sentences[currentSentenceIndex];
+      if (!pointLost) {
+        score++;
+        showFeedback(`Pregunta completada. Punto conseguido: ${currentData.type}, ${currentData.person}.ª persona, ${currentData.number}.`, "success");
+      } else {
+        showFeedback(`Pregunta completada. Respuesta final: ${currentData.type}, ${currentData.person}.ª persona, ${currentData.number}. No suma punto por errores previos.`, "warning");
+      }
 
-            const currentData = sentences[currentSentenceIndex];
-            const words = currentData.sentence.split(/\s+/); // Separar por espacios
-            let html = '';
+      sentenceEl.querySelectorAll(".word").forEach(span => {
+        span.removeEventListener("click", handleWordClick);
+      });
 
-            // Renderiza cada palabra como un span clickeable
-            words.forEach(word => {
-                // Limpia la palabra para comparación, manteniendo la puntuación para el display
-                const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
-                
-                // Si la palabra contiene el pronombre (o es el pronombre), le damos un ID para el listener.
-                // Manejo especial para pronombres pegados (Dímelo -> me, lo) o pronombre completo
-                
-                html += `<span data-word="${cleanWord}" class="word inline-block mr-1 cursor-pointer transition duration-150 p-1 select-none">${word}</span> `;
-            });
+      updateProgressDisplay();
+      nextButton.classList.remove("hidden");
+    }
 
-            sentenceEl.innerHTML = html;
-            resetClassificationSteps();
-            resetState();
-            updateProgressDisplay(); // Actualiza el progreso al cargar la nueva oración
+    function nextSentence() {
+      currentSentenceIndex++;
+      renderSentence();
+    }
 
-            // Asigna el evento click a cada palabra
-            document.querySelectorAll('#current-sentence .word').forEach(span => {
-                span.addEventListener('click', handleWordClick);
-            });
-        }
+    function showFinalScore() {
+      showScreen(finalScreen);
+      document.getElementById("final-score").textContent = `${score}/${sentences.length}`;
 
-        // Maneja el click en una palabra para seleccionar el pronombre
-        function handleWordClick(event) {
-            // Solo permite selección de pronombre si no ha sido seleccionado aún
-            if (state.pronounSelected) return;
+      const title = document.getElementById("final-title");
+      const message = document.getElementById("final-message");
 
-            const selectedSpan = event.target;
-            const wordText = selectedSpan.textContent.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
-            const currentData = sentences[currentSentenceIndex];
+      if (score === sentences.length) {
+        title.textContent = "¡Perfecto!";
+        message.textContent = "Has completado todas las oraciones sin errores. Gran trabajo con los pronombres personales.";
+      } else if (score >= Math.ceil(sentences.length * 0.75)) {
+        title.textContent = "¡Buen trabajo!";
+        message.textContent = "Has terminado la actividad con un resultado alto. Repítela para intentar llegar al pleno.";
+      } else {
+        title.textContent = "Actividad terminada";
+        message.textContent = "Has completado todas las oraciones. Repasar y repetir te ayudará a reconocerlos más rápido.";
+      }
+    }
 
-            // 1. Limpiar selecciones anteriores (si las hay)
-            document.querySelectorAll('#current-sentence .word').forEach(span => {
-                span.classList.remove('correct-pronoun', 'incorrect-selection');
-            });
+    function resetState() {
+      state = {
+        pronounSelected: false,
+        typeCorrect: false,
+        personCorrect: false,
+        numberCorrect: false
+      };
+    }
 
-            // 2. Verificar si es el pronombre
-            let isCorrect = false;
+    function resetClassificationSteps() {
+      ["type", "person", "number"].forEach(step => {
+        const card = document.getElementById(`step-${step}`);
+        card.classList.remove("active-step", "done-step");
+      });
 
-            // Manejo de pronombres pegados (e.g., "comprarte" -> te) o pronombres tónicos completos
-            // Se verifica si la palabra seleccionada *contiene* el pronombre correcto
-            if (selectedSpan.textContent.toLowerCase().includes(currentData.pronoun.toLowerCase())) {
-                
-                // Regla: Si la palabra completa coincide O el pronombre es átono (y por lo tanto, puede estar pegado al verbo)
-                if (wordText.toLowerCase() === currentData.pronoun.toLowerCase() || currentData.type === 'átono') {
-                    isCorrect = true;
-                }
-            }
+      document.querySelectorAll(".classification-button").forEach(btn => {
+        btn.disabled = true;
+        btn.classList.remove("correct", "incorrect");
+        btn.removeEventListener("click", handleClassificationClick);
+      });
+    }
 
+    function updateProgressDisplay() {
+      const total = sentences.length;
+      const current = Math.min(currentSentenceIndex + 1, total);
+      scoreDisplay.textContent = score;
+      questionDisplay.textContent = `${current}/${total}`;
+      const percent = total === 0 ? 0 : (currentSentenceIndex / total) * 100;
+      progressBar.style.width = `${Math.min(percent, 100)}%`;
+    }
 
-            if (isCorrect) {
-                selectedSpan.classList.add('correct-pronoun');
-                feedbackEl.textContent = '¡Correcto! Ahora clasifica el pronombre.';
-                state.pronounSelected = true;
-                
-                // Activar el primer paso de clasificación
-                activateClassificationStep('type');
-                
-            } else {
-                selectedSpan.classList.add('incorrect-selection');
-                feedbackEl.textContent = 'Esa no es la palabra correcta. Intenta de nuevo.';
-                setTimeout(() => {
-                    selectedSpan.classList.remove('incorrect-selection');
-                    feedbackEl.textContent = 'Elige el pronombre personal.';
-                }, 1500);
-            }
-        }
+    function showFeedback(text, type) {
+      feedbackEl.textContent = text;
+      feedbackEl.className = `feedback ${type}`;
+    }
 
-        // Activa el siguiente set de botones de clasificación
-        function activateClassificationStep(step) {
-            document.querySelectorAll(`.classification-button[data-category="${step}"]`).forEach(btn => {
-                btn.classList.remove('inactive');
-                btn.classList.add('active');
-                btn.addEventListener('click', handleClassificationClick);
-            });
-        }
-
-        // Desactiva un set de botones de clasificación
-        function deactivateClassificationStep(step) {
-             document.querySelectorAll(`.classification-button[data-category="${step}"]`).forEach(btn => {
-                btn.classList.remove('active');
-                btn.classList.add('inactive');
-                btn.removeEventListener('click', handleClassificationClick);
-            });
-        }
-
-        // Maneja el click en los botones de clasificación
-        function handleClassificationClick(event) {
-            const button = event.target;
-            const category = button.dataset.category;
-            const value = button.dataset.value;
-            const currentData = sentences[currentSentenceIndex];
-
-            // 1. Verificar si el paso está activo
-            if (!button.classList.contains('active')) return;
-
-            // 2. Limpiar selecciones previas en la misma categoría
-            document.querySelectorAll(`.classification-button[data-category="${category}"]`).forEach(btn => {
-                btn.classList.remove('selected', 'correct', 'incorrect');
-            });
-
-            // 3. Marcar la selección actual
-            button.classList.add('selected');
-
-            // 4. Validar
-            let isCorrect = false;
-            let nextStep = null;
-
-            if (category === 'type' && value === currentData.type) {
-                state.typeCorrect = true;
-                nextStep = 'person';
-                isCorrect = true;
-            } else if (category === 'person' && parseInt(value) === currentData.person) {
-                state.personCorrect = true;
-                nextStep = 'number';
-                isCorrect = true;
-            } else if (category === 'number' && value === currentData.number) {
-                state.numberCorrect = true;
-                nextStep = 'done';
-                isCorrect = true;
-            }
-
-            // 5. Feedback y Progresión
-            if (isCorrect) {
-                button.classList.remove('selected');
-                button.classList.add('correct');
-                feedbackEl.textContent = `¡Muy bien! Clasificación de ${category} correcta.`;
-                state.stepsCompleted++;
-                deactivateClassificationStep(category);
-
-                if (nextStep === 'done') {
-                    // Todos los pasos completados
-                    score++;
-                    updateProgressDisplay();
-                    feedbackEl.textContent = '¡Felicidades! Clasificación completa y correcta. Puedes pasar a la siguiente oración.';
-                    nextButton.classList.remove('hidden');
-                    // Desactivar todos los listeners para evitar cambios
-                    document.querySelectorAll('#current-sentence .word').forEach(span => {
-                        span.removeEventListener('click', handleWordClick);
-                    });
-                } else {
-                    // Activar el siguiente paso
-                    activateClassificationStep(nextStep);
-                }
-            } else {
-                button.classList.remove('selected');
-                button.classList.add('incorrect');
-                feedbackEl.textContent = `Error en ${category}. Intenta otra opción.`;
-                // El usuario debe corregir antes de avanzar.
-            }
-        }
-
-        // Pasa a la siguiente oración
-        function nextSentence() {
-            currentSentenceIndex++;
-            nextButton.classList.add('hidden');
-            renderSentence();
-        }
-
-        // Muestra el puntaje final
-        function showFinalScore() {
-            sentenceEl.innerHTML = `<p class="text-3xl font-bold text-indigo-700">Juego Terminado</p>`;
-            feedbackEl.textContent = `¡Has completado las ${sentences.length} oraciones! Tu puntaje final es: ${score} de ${sentences.length}.`;
-            
-            // Ocultar clasificación y mostrar reiniciar
-            document.getElementById('classification-area').classList.add('hidden');
-            restartButton.classList.remove('hidden');
-            updateProgressDisplay(); // Para mostrar el resultado final
-        }
-
-        // Resetea el estado del juego para la nueva oración
-        function resetState() {
-            state = {
-                pronounSelected: false,
-                typeCorrect: false,
-                personCorrect: false,
-                numberCorrect: false,
-                stepsCompleted: 0
-            };
-            document.getElementById('classification-area').classList.remove('hidden');
-        }
-
-        // Limpia todos los botones de clasificación y los desactiva
-        function resetClassificationSteps() {
-            nextButton.classList.add('hidden');
-            feedbackEl.textContent = 'Elige el pronombre personal.';
-            document.querySelectorAll('.classification-button').forEach(btn => {
-                btn.classList.remove('active', 'selected', 'correct', 'incorrect');
-                btn.classList.add('inactive');
-                btn.removeEventListener('click', handleClassificationClick);
-            });
-        }
-
-        // Actualiza el contador de progreso y las preguntas restantes
-        function updateProgressDisplay() {
-            const total = sentences.length;
-            const current = currentSentenceIndex + 1;
-            const remaining = total - currentSentenceIndex - 1;
-            
-            // Muestra el puntaje final si el juego ha terminado
-            if (currentSentenceIndex >= total) {
-                progressEl.innerHTML = `<span class="text-green-600">Puntaje Final: ${score}/${total}</span>`;
-            } else {
-                // Formato: Pregunta X de Y | Quedan Z por clasificar.
-                progressEl.innerHTML = `<span class="text-gray-800 font-bold">Pregunta ${current} de ${total}</span> | <span class="text-indigo-600">Quedan ${remaining}</span>`;
-            }
-        }
-
-        // Iniciar el juego al cargar la página
-        window.onload = initializeGame;
-
-    </script>
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
 </body>
 </html>
